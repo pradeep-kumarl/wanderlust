@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm i --ignore-scripts
+RUN npm install
+
+RUN npm run test
 
 COPY .env.sample .env.local
 
