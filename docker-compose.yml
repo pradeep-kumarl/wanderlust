@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - wanderlust-net
+
+  redis-container:
+    image: redis:latest
+    container_name: redis-container
+    networks:
+      - wanderlust-net
+
+  backend-container:
+    image: backend:latest
+    container_name: backend-container
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis-container
+    networks:
+      - wanderlust-net
+
+  frontend-container:
+    image: frontend:latest
+    container_name: frontend-container
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend-container
+    networks:
+      - wanderlust-net
+
+networks:
+  wanderlust-net:
+    external: true
