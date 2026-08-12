@@ -5,6 +5,8 @@ WORKDIR /app
 copy . .
 #copy source to destination
 RUN npm i
+#tests
+RUN npm run test
 #install Node Package Manager
 COPY .env.sample .env
 #copy sample env files to edit later with ip
