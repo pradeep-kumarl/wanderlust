@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install --ingore-scripts
+RUN npm install --ignore-scripts
 
 COPY .env.sample .env.local
 
