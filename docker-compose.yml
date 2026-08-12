@@ -2,14 +2,18 @@ services:
   mongo:
     image: mongo:latest
     container_name: mongo
+    restart: unless-stopped
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
     networks:
       - wanderlust-net
 
   redis-container:
     image: redis:latest
     container_name: redis-container
+    restart: unless-stopped
     networks:
       - wanderlust-net
 
@@ -18,6 +22,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend-container
+    restart: unless-stopped
     ports:
       - "5000:5000"
     depends_on:
@@ -31,6 +36,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend-container
+    restart: unless-stopped
     ports:
       - "5173:5173"
     depends_on:
@@ -41,3 +47,6 @@ services:
 networks:
   wanderlust-net:
     external: true
+
+volumes:
+  mongo-data:
