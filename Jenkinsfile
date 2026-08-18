@@ -19,6 +19,25 @@ pipeline{
             }
         }
 
+        stage("Update SonarQube Webhook"){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'sonar-admin-creds', usernameVariable: 'SONAR_USER', passwordVariable: 'SONAR_PASS')]) {
+                    sh """
+                    # Delete old webhook if it exists (ignore failure if none found)
+                    WEBHOOK_KEY=\$(curl -s -u \$SONAR_USER:\$SONAR_PASS "http://${env.CURRENT_IP}:9000/api/webhooks/list" | grep -o '\"key\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4)
+                    if [ ! -z "\$WEBHOOK_KEY" ]; then
+                        curl -s -u \$SONAR_USER:\$SONAR_PASS -X POST "http://${env.CURRENT_IP}:9000/api/webhooks/delete" -d "webhook=\$WEBHOOK_KEY"
+                    fi
+
+                    # Create fresh webhook pointing to current Jenkins IP
+                    curl -s -u \$SONAR_USER:\$SONAR_PASS -X POST "http://${env.CURRENT_IP}:9000/api/webhooks/create" \
+                        -d "name=jenkins-wanderlust" \
+                        -d "url=http://${env.CURRENT_IP}:8080/sonarqube-webhook/"
+                    """
+                }
+            }
+        }
+
         stage("Prepare Env Files"){
             steps{
                 script{
@@ -82,11 +101,12 @@ GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
                 sh "docker compose up -d --build --no-cache"
             }
         }
+
         stage("Cleanup Old Images"){
             steps{
                 sh "docker image prune -f"
                 sh "docker builder prune -f"
-       }
-  }
+            }
+        }
     }
 }
