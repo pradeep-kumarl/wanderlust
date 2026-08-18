@@ -104,7 +104,8 @@ GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
         stage("Deploy with Docker Compose"){
             steps{
                 sh "docker compose down"
-                sh "docker compose up -d --build --no-cache"
+                sh "docker compose build --no-cache"
+                sh "docker compose up -d"
             }
         }
 
