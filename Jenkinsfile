@@ -44,6 +44,34 @@ pipeline{
             }
         }
 
+        stage("Update GitHub Webhook"){
+            steps{
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh """
+                    REPO="pradeep-kumarl/wanderlust"
+                    NEW_URL="http://${env.CURRENT_IP}:8080/github-webhook/"
+
+                    # Get list of existing webhooks and find any pointing to old Jenkins IP
+                    HOOK_ID=\$(curl -s -H "Authorization: token \$GITHUB_TOKEN" \
+                        "https://api.github.com/repos/\$REPO/hooks" | \
+                        grep -B5 "github-webhook" | grep '"id"' | head -1 | grep -o '[0-9]*')
+
+                    if [ ! -z "\$HOOK_ID" ]; then
+                        # Update existing webhook with current IP
+                        curl -s -X PATCH -H "Authorization: token \$GITHUB_TOKEN" \
+                            "https://api.github.com/repos/\$REPO/hooks/\$HOOK_ID" \
+                            -d "{\\"config\\":{\\"url\\":\\"\$NEW_URL\\",\\"content_type\\":\\"json\\"}}"
+                    else
+                        # Create new webhook if none exists
+                        curl -s -X POST -H "Authorization: token \$GITHUB_TOKEN" \
+                            "https://api.github.com/repos/\$REPO/hooks" \
+                            -d "{\\"name\\":\\"web\\",\\"active\\":true,\\"events\\":[\\"push\\"],\\"config\\":{\\"url\\":\\"\$NEW_URL\\",\\"content_type\\":\\"json\\"}}"
+                    fi
+                    """
+                }
+            }
+        }
+
         stage("Prepare Env Files"){
             steps{
                 script{
