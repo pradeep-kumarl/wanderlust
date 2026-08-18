@@ -82,5 +82,11 @@ GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
                 sh "docker compose up -d --build --no-cache"
             }
         }
+        stage("Cleanup Old Images"){
+            steps{
+                sh "docker image prune -f"
+                sh "docker builder prune -f"
+       }
+  }
     }
 }
