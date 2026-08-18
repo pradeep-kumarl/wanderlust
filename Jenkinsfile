@@ -47,27 +47,24 @@ pipeline{
         stage("Update GitHub Webhook"){
             steps{
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-                    sh """
-                    REPO="pradeep-kumarl/wanderlust"
-                    NEW_URL="http://${env.CURRENT_IP}:8080/github-webhook/"
+                    script{
+                        def repo = "pradeep-kumarl/wanderlust"
+                        def newUrl = "http://${env.CURRENT_IP}:8080/github-webhook/"
 
-                    # Get list of existing webhooks and find any pointing to old Jenkins IP
-                    HOOK_ID=\$(curl -s -H "Authorization: token \$GITHUB_TOKEN" \
-                        "https://api.github.com/repos/\$REPO/hooks" | \
-                        grep -B5 "github-webhook" | grep '"id"' | head -1 | grep -o '[0-9]*')
+                        writeFile file: 'webhook_payload.json', text: """{"name":"web","active":true,"events":["push"],"config":{"url":"${newUrl}","content_type":"json"}}"""
 
-                    if [ ! -z "\$HOOK_ID" ]; then
-                        # Update existing webhook with current IP
-                        curl -s -X PATCH -H "Authorization: token \$GITHUB_TOKEN" \
-                            "https://api.github.com/repos/\$REPO/hooks/\$HOOK_ID" \
-                            -d "{\\"config\\":{\\"url\\":\\"\$NEW_URL\\",\\"content_type\\":\\"json\\"}}"
-                    else
-                        # Create new webhook if none exists
-                        curl -s -X POST -H "Authorization: token \$GITHUB_TOKEN" \
-                            "https://api.github.com/repos/\$REPO/hooks" \
-                            -d "{\\"name\\":\\"web\\",\\"active\\":true,\\"events\\":[\\"push\\"],\\"config\\":{\\"url\\":\\"\$NEW_URL\\",\\"content_type\\":\\"json\\"}}"
-                    fi
-                    """
+                        sh """
+                        HOOK_ID=\$(curl -s -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks" | grep -B5 "github-webhook" | grep '"id"' | head -1 | grep -o '[0-9]*')
+
+                        if [ ! -z "\$HOOK_ID" ]; then
+                            curl -s -X PATCH -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks/\$HOOK_ID" -d @webhook_payload.json
+                        else
+                            curl -s -X POST -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks" -d @webhook_payload.json
+                        fi
+
+                        rm -f webhook_payload.json
+                        """
+                    }
                 }
             }
         }
