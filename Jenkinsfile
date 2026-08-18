@@ -13,8 +13,14 @@ pipeline{
         stage("Detect Current Public IP"){
             steps{
                 script{
-                    env.CURRENT_IP = sh(script: "curl -s http://169.254.169.254/latest/meta-data/public-ipv4", returnStdout: true).trim()
+                    env.CURRENT_IP = sh(script: '''
+                        TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+                        curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4
+                    ''', returnStdout: true).trim()
                     echo "Detected EC2 Public IP: ${env.CURRENT_IP}"
+                    if (env.CURRENT_IP == "") {
+                        error("Failed to detect EC2 public IP - aborting build")
+                    }
                 }
             }
         }
