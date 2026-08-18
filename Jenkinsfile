@@ -29,7 +29,7 @@ REDIS_URL=redis://redis:6379
 FRONTEND_URL=http://${env.CURRENT_IP}:5173
 """
                     // Frontend .env
-                    writeFile file: 'frontend/.env', text: """VITE_API_URL=http://${env.CURRENT_IP}:5000
+                    writeFile file: 'frontend/.env', text: """VITE_API_PATH=http://${env.CURRENT_IP}:5000
 """
                 }
             }
