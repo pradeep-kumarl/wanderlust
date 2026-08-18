@@ -24,10 +24,20 @@ pipeline{
                 script{
                     // Backend .env
                     writeFile file: 'backend/.env', text: """PORT=5000
-MONGO_URI=mongodb://mongo:27017/wanderlust
-REDIS_URL=redis://redis:6379
+MONGODB_URI="mongodb://mongo:27017/wanderlust"
+REDIS_URL="redis://redis-container:6379"
 FRONTEND_URL=http://${env.CURRENT_IP}:5173
+BACKEND_URL=http://${env.CURRENT_IP}:5000
+ACCESS_COOKIE_MAXAGE=120000
+ACCESS_TOKEN_EXPIRES_IN='120s'
+REFRESH_COOKIE_MAXAGE=120000
+REFRESH_TOKEN_EXPIRES_IN='120s'
+JWT_SECRET=7ddd8b38486eee723ce2505f6db06f1ee503fde5eb06fc04687191a0ed665f3f98776902d2c89f6b993b1c579a87fedaf584c693a106f7cbf16e8b4e67e9d6df
+NODE_ENV=Development
+GOOGLE_CLIENT_ID=your_actual_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
 """
+
                     // Frontend .env
                     writeFile file: 'frontend/.env', text: """VITE_API_PATH=http://${env.CURRENT_IP}:5000
 """
@@ -69,7 +79,7 @@ FRONTEND_URL=http://${env.CURRENT_IP}:5173
         stage("Deploy with Docker Compose"){
             steps{
                 sh "docker compose down"
-                sh "docker compose up -d --build"
+                sh "docker compose up -d --build --no-cache"
             }
         }
     }
