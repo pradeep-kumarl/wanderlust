@@ -54,7 +54,7 @@ pipeline{
                         writeFile file: 'webhook_payload.json', text: """{"name":"web","active":true,"events":["push"],"config":{"url":"${newUrl}","content_type":"json"}}"""
 
                         sh """
-                        HOOK_ID=\$(curl -s -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks" | grep -B5 "github-webhook" | grep '"id"' | head -1 | grep -o '[0-9]*')
+                        HOOK_ID=\$(curl -s -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks" | grep -B5 "github-webhook" | grep '"id"' | head -1 | grep -o '[0-9]*' || true)
 
                         if [ ! -z "\$HOOK_ID" ]; then
                             curl -s -X PATCH -H "Authorization: token \$GITHUB_TOKEN" "https://api.github.com/repos/${repo}/hooks/\$HOOK_ID" -d @webhook_payload.json
